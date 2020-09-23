@@ -1,27 +1,26 @@
+# -*- coding: utf-8 -*- 
 from flask import Flask, jsonify, request 
 
-app          = Flask(__name__)
-app.users    = {}
-app.id_count = 1
-app.tweets   = []
+if __name__ == '__main__':
+  app = Flask(__name__)
+  app.run(host='0.0.0.0', port=5000, debug=True)
 
 @app.route('/tweet', methods=['POST'])
 def tweet():
-    payload = request.json
-    user_id = int(payload['id'])
-    tweet   = payload['tweet']
+  user_tweet = request.json
+  tweet = user_tweet['tweet']
 
-    if user_id not in app.users:
-        return '유저가 존재 하지 않습니다', 400
-
-    if len(tweet) > 300:
-        return '300자를 초과했습니다', 400
-
-    user_id = int(payload['id'])
-
-    app.tweets.append({
-        'user_id' : user_id,
-        'tweet'   : tweet
-    })
-
-    return '', 200
+  if len(tweet) > 300:
+      return '300자를 초과했습니다', 400
+  
+  app.database.execute(text("""
+        INSERT INTO tweets (
+            user_id,
+            tweet
+        ) VALUES (
+            :id,
+            :tweet
+        )
+    """), user_tweet)
+  
+  return '', 200
