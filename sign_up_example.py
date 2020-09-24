@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, current_app
 from sqlalchemy import create_engine,text
+import bcrypt
 
 def create_app(test_config = None):
     app = Flask(__name__)
@@ -21,6 +22,7 @@ if __name__ == '__main__':
 @app.route("/sign-up", methods=['POST']) 
 def sign_up(): 
     new_user                = request.json
+    new_user['password'] = bcrypt.hashpw(new_user['password'].encode('UTF-8'),bcrypt.gensalt())
     new_user_id = app.database.execute(text("""
         INSERT INTO users (
             name,
@@ -34,7 +36,7 @@ def sign_up():
             :password
         )
     """), user).lastrowid
-
+    
     row = current_app.database.execute(text("""
         SELECT 
             id,
@@ -47,7 +49,7 @@ def sign_up():
         'user_id' : new_user_id 
     }).fetchone()
 
-    create_user = {
+    created_user = {
         'id'      : row['id'],
         'name'    : row['name'],
         'email'   : row['email'],
